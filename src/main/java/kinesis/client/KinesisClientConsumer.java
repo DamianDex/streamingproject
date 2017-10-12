@@ -38,7 +38,7 @@ public class KinesisClientConsumer extends KinesisClientAbstract {
 
         ///TODO: Temporary
         for (Record record : getRecordsResult.getRecords()) {
-            System.out.println(record);
+            System.out.println(new String(record.getData().array()));
         }
         ///
     }

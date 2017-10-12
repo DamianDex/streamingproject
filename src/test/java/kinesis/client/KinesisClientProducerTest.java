@@ -35,7 +35,7 @@ public class KinesisClientProducerTest {
     public void sendSingleRecord() {
         KinesisClientProducer kinesisClientProducer = new KinesisClientProducer("http://localhost:4568", jTextArea);
         //kinesisClientProducer.createStream("test1", 1);
-        kinesisClientProducer.sendSingleRecord("test1", "a");
+        kinesisClientProducer.sendSingleRecord("test1", "{a: 1}");
         KinesisClientConsumer kinesisClientConsumer = new KinesisClientConsumer("http://localhost:4568", jTextArea);
         kinesisClientConsumer.getRecords();
     }
