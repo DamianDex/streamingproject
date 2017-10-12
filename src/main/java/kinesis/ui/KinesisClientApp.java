@@ -1,6 +1,6 @@
 package kinesis.ui;
 
-import kinesis.client.KinesisClient;
+import kinesis.client.KinesisClientProducer;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
@@ -14,8 +14,8 @@ public class KinesisClientApp {
     public KinesisClientApp() {
         checkConnectivity.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
-                KinesisClient kinesisClient = new KinesisClient("http://localhost:4568", textAreaLogger);
-                boolean result = kinesisClient.verifyConnection();
+                KinesisClientProducer kinesisClientProducer = new KinesisClientProducer("http://localhost:4568", textAreaLogger);
+                boolean result = kinesisClientProducer.verifyConnection();
                 System.out.println(result);
             }
         });

@@ -5,6 +5,7 @@ import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.services.kinesis.AmazonKinesisClientBuilder;
 import com.amazonaws.services.kinesis.model.PutRecordRequest;
+import com.amazonaws.services.kinesis.model.PutRecordResult;
 
 import javax.swing.*;
 import java.nio.ByteBuffer;
@@ -42,6 +43,8 @@ public class KinesisClientProducer extends KinesisClientAbstract {
         putRecordRequest.setStreamName(streamName);
         putRecordRequest.setData(ByteBuffer.wrap(data.getBytes()));
         putRecordRequest.setPartitionKey("dummy partition key");
-        amazonKinesis.putRecord(putRecordRequest);
+        PutRecordResult putRecordResult = amazonKinesis.putRecord(putRecordRequest);
+        //TODO: Temporary
+        System.out.println(putRecordResult.toString());
     }
 }
