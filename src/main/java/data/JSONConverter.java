@@ -11,8 +11,7 @@ public class JSONConverter {
         return out.toString();
     }
 
-    public static String StringToJSON(String jsonString) {
-        //TODO: Implement
-        return null;
+    public static JSONObject StringToJSON(String jsonString) {
+        return new JSONObject(jsonString);
     }
 }
