@@ -12,13 +12,20 @@ public class KinesisClientApp {
     private JPanel mainPanel;
     private JTextArea textAreaLogger;
     private JButton chooseFileButton;
+    private JTextField textField1;
+    private JTextField textField2;
+
+    private boolean connected = false;
 
     public KinesisClientApp() {
+
+        textField1.setText("http://localhost:4568");
+
         checkConnectivity.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
                 KinesisClientProducer kinesisClientProducer = new KinesisClientProducer("http://localhost:4568", textAreaLogger);
                 boolean result = kinesisClientProducer.verifyConnection();
-                System.out.println(result);
+                updateAfterConnected();
             }
         });
 
@@ -39,5 +46,9 @@ public class KinesisClientApp {
         jFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         jFrame.pack();
         jFrame.setVisible(true);
+    }
+
+    private void updateAfterConnected() {
+        chooseFileButton.setEnabled(false);
     }
 }
