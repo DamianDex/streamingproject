@@ -22,6 +22,10 @@ public class KinesisClientApp {
     private JTextArea textAreaLogger;
     private JLabel connectionStatusLabel;
 
+    private JPanel connectionPanel;
+    private JPanel loggerPanel;
+    private JPanel filePanel;
+
     private File dataFile;
 
     //Kinesis Producer//
@@ -81,6 +85,9 @@ public class KinesisClientApp {
     }
 
     private void initUI() {
+        connectionPanel.setBorder(BorderFactory.createTitledBorder("Connection details"));
+        filePanel.setBorder(BorderFactory.createTitledBorder("Data details"));
+        loggerPanel.setBorder(BorderFactory.createTitledBorder("Log details"));
         startButton.setEnabled(false);
         chooseFileButton.setEnabled(false);
         filePathField.setEditable(false);
@@ -90,17 +97,11 @@ public class KinesisClientApp {
         connectionStatusLabel.setText("Connected");
         chooseFileButton.setEnabled(true);
         startButton.setEnabled(true);
-
-        mainPanel.setBorder(BorderFactory.createBevelBorder(1));
-
     }
 
     private void updateNotConnected() {
         connectionStatusLabel.setText("Not Connected");
         chooseFileButton.setEnabled(false);
         startButton.setEnabled(false);
-
-        mainPanel.setBorder(BorderFactory.createTitledBorder("Connection"));
-
     }
 }
