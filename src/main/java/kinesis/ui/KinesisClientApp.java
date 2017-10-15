@@ -3,52 +3,104 @@ package kinesis.ui;
 import kinesis.client.KinesisClientProducer;
 
 import javax.swing.*;
-import javax.swing.table.TableColumn;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 
 public class KinesisClientApp {
-    private JButton checkConnectivity;
-    private JPanel mainPanel;
-    private JTextArea textAreaLogger;
-    private JButton chooseFileButton;
-    private JTextField textField1;
-    private JTextField textField2;
 
-    private boolean connected = false;
+    //GUI Elements//
+    private JPanel mainPanel;
+    private JButton checkConnectivityBtn;
+    private JButton chooseFileButton;
+    private JButton startButton;
+    private JTextField endpoint;
+    private JTextField filePathField;
+    private JTextArea textAreaLogger;
+    private JLabel connectionStatusLabel;
+
+    private File dataFile;
+
+    //Kinesis Producer//
+    private KinesisClientProducer kinesisClientProducer;
 
     public KinesisClientApp() {
-
-        textField1.setText("http://localhost:4568");
-
-        checkConnectivity.addActionListener(new ActionListener() {
+        checkConnectivityBtn.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(ActionEvent actionEvent) {
-                KinesisClientProducer kinesisClientProducer = new KinesisClientProducer("http://localhost:4568", textAreaLogger);
+                kinesisClientProducer = new KinesisClientProducer(endpoint.getText(), textAreaLogger);
+
                 boolean result = kinesisClientProducer.verifyConnection();
-                updateAfterConnected();
+                if(result)
+                    updateConnected();
+                else
+                    updateNotConnected();
             }
         });
 
-        //TODO: Implement choosing file with JSONs data
         chooseFileButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
                 JFileChooser jFileChooser = new JFileChooser();
                 jFileChooser.showOpenDialog(jFileChooser);
-                System.out.println(jFileChooser.getSelectedFile().toString());
+                dataFile = jFileChooser.getSelectedFile();
+                filePathField.setText(jFileChooser.getSelectedFile().toString());
+            }
+        });
+
+        startButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                try {
+                    try (BufferedReader br = new BufferedReader(new FileReader(dataFile))) {
+                        String line;
+                        while ((line = br.readLine()) != null) {
+                            textAreaLogger.append(line);
+                            kinesisClientProducer.sendSingleRecord("test1", line);
+                        }
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
         });
     }
 
     public static void main(String[] args) {
         JFrame jFrame = new JFrame("AWS Amazon Kinesis Client");
-        jFrame.setContentPane(new KinesisClientApp().mainPanel);
+        KinesisClientApp kinesisClientApp = new KinesisClientApp();
+        jFrame.setContentPane(kinesisClientApp.mainPanel);
         jFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         jFrame.pack();
         jFrame.setVisible(true);
+
+        kinesisClientApp.initUI();
     }
 
-    private void updateAfterConnected() {
+    private void initUI() {
+        startButton.setEnabled(false);
         chooseFileButton.setEnabled(false);
+        filePathField.setEditable(false);
+    }
+
+    private void updateConnected() {
+        connectionStatusLabel.setText("Connected");
+        chooseFileButton.setEnabled(true);
+        startButton.setEnabled(true);
+
+        mainPanel.setBorder(BorderFactory.createBevelBorder(1));
+
+    }
+
+    private void updateNotConnected() {
+        connectionStatusLabel.setText("Not Connected");
+        chooseFileButton.setEnabled(false);
+        startButton.setEnabled(false);
+
+        mainPanel.setBorder(BorderFactory.createTitledBorder("Connection"));
+
     }
 }
