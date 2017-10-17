@@ -43,8 +43,5 @@ public class KinesisClientProducer extends KinesisClientAbstract {
         putRecordRequest.setStreamName(streamName);
         putRecordRequest.setData(ByteBuffer.wrap(data.getBytes()));
         putRecordRequest.setPartitionKey("dummy partition key");
-        PutRecordResult putRecordResult = amazonKinesis.putRecord(putRecordRequest);
-        //TODO: Temporary
-        System.out.println(putRecordResult.toString());
     }
 }

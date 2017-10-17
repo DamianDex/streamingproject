@@ -5,10 +5,7 @@ import kinesis.client.KinesisClientProducer;
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 
 public class KinesisClientApp {
 
@@ -25,23 +22,26 @@ public class KinesisClientApp {
     private JPanel connectionPanel;
     private JPanel loggerPanel;
     private JPanel filePanel;
+    private JPanel streamsPanel;
+    private JComboBox streamComboBox;
+    private JRadioButton newStreamBtn;
+    private JRadioButton existingStreamBtn;
+    private JTextField newStreamNameField;
 
     private File dataFile;
 
-    //Kinesis Producer//
     private KinesisClientProducer kinesisClientProducer;
 
     public KinesisClientApp() {
         checkConnectivityBtn.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
-                kinesisClientProducer = new KinesisClientProducer(endpoint.getText(), textAreaLogger);
-
-                boolean result = kinesisClientProducer.verifyConnection();
-                if(result)
+                try {
+                    kinesisClientProducer = new KinesisClientProducer(endpoint.getText(), textAreaLogger);
                     updateConnected();
-                else
+                } catch (Exception ex) {
                     updateNotConnected();
+                }
             }
         });
 
@@ -58,19 +58,52 @@ public class KinesisClientApp {
         startButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
+
+                String streamName = pointStream();
+                FileReader fileReader = null;
+
                 try {
-                    try (BufferedReader br = new BufferedReader(new FileReader(dataFile))) {
-                        String line;
-                        while ((line = br.readLine()) != null) {
-                            textAreaLogger.append(line);
-                            kinesisClientProducer.sendSingleRecord("test1", line);
-                        }
+                    fileReader = new FileReader(dataFile);
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                }
+
+                try (BufferedReader br = new BufferedReader(fileReader)) {
+                    String line;
+                    while ((line = br.readLine()) != null) {
+                        textAreaLogger.append(line + "\n");
+                        kinesisClientProducer.sendSingleRecord(streamName, line);
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
             }
         });
+
+        existingStreamBtn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                streamComboBox.removeAllItems();
+                pushStreamNamesToComboBox();
+            }
+        });
+    }
+
+    private String pointStream() {
+        String streamName;
+
+        if (newStreamBtn.isSelected()) {
+            streamName = newStreamNameField.getText();
+            kinesisClientProducer.createStream(streamName, 1);
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        } else {
+            streamName = streamComboBox.getSelectedItem().toString();
+        }
+        return streamName;
     }
 
     public static void main(String[] args) {
@@ -80,6 +113,7 @@ public class KinesisClientApp {
         jFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         jFrame.pack();
         jFrame.setVisible(true);
+        jFrame.setSize(600, 600);
 
         kinesisClientApp.initUI();
     }
@@ -88,9 +122,16 @@ public class KinesisClientApp {
         connectionPanel.setBorder(BorderFactory.createTitledBorder("Connection details"));
         filePanel.setBorder(BorderFactory.createTitledBorder("Data details"));
         loggerPanel.setBorder(BorderFactory.createTitledBorder("Log details"));
+        streamsPanel.setBorder(BorderFactory.createTitledBorder("Stream details"));
         startButton.setEnabled(false);
         chooseFileButton.setEnabled(false);
         filePathField.setEditable(false);
+        streamComboBox.setEditable(false);
+        newStreamBtn.doClick();
+
+        ButtonGroup buttonGroup = new ButtonGroup();
+        buttonGroup.add(newStreamBtn);
+        buttonGroup.add(existingStreamBtn);
     }
 
     private void updateConnected() {
@@ -101,7 +142,11 @@ public class KinesisClientApp {
 
     private void updateNotConnected() {
         connectionStatusLabel.setText("Not Connected");
-        chooseFileButton.setEnabled(false);
-        startButton.setEnabled(false);
+    }
+
+    private void pushStreamNamesToComboBox() {
+        for (String name : kinesisClientProducer.getAllStreamNames()) {
+            streamComboBox.addItem(name);
+        }
     }
 }
