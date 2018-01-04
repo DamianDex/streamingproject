@@ -13,20 +13,29 @@ public class KinesisClientApp {
     private JPanel mainPanel;
     private JButton checkConnectivityBtn;
     private JButton chooseFileButton;
-    private JButton startButton;
+    private JButton producerStartBtn;
     private JTextField endpoint;
     private JTextField filePathField;
-    private JTextArea textAreaLogger;
+    private JTextArea producerLogsArea;
     private JLabel connectionStatusLabel;
 
-    private JPanel connectionPanel;
-    private JPanel loggerPanel;
-    private JPanel filePanel;
-    private JPanel streamsPanel;
+    private JPanel producerConnectionPanel;
+    private JPanel producerLoggerPanel;
+    private JPanel producerFilePanel;
+    private JPanel producerStreamsPanel;
     private JComboBox streamComboBox;
     private JRadioButton newStreamBtn;
     private JRadioButton existingStreamBtn;
     private JTextField newStreamNameField;
+    private JPanel producerPanel;
+    private JPanel consumerPanel;
+    private JPanel consumerLoggerPanel;
+    private JTextArea consumerLogsArea;
+    private JButton consumerStartBtn;
+    private JPanel consumerStreamsPanel;
+    private JComboBox consumerStreamComboBox;
+    private JTextField textField1;
+    private JTextField textField2;
 
     private File dataFile;
 
@@ -37,7 +46,7 @@ public class KinesisClientApp {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
                 try {
-                    kinesisClientProducer = new KinesisClientProducer(endpoint.getText(), textAreaLogger);
+                    kinesisClientProducer = new KinesisClientProducer(endpoint.getText(), producerLogsArea);
                     updateConnected();
                 } catch (Exception ex) {
                     updateNotConnected();
@@ -55,7 +64,7 @@ public class KinesisClientApp {
             }
         });
 
-        startButton.addActionListener(new ActionListener() {
+        producerStartBtn.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
 
@@ -71,7 +80,7 @@ public class KinesisClientApp {
                 try (BufferedReader br = new BufferedReader(fileReader)) {
                     String line;
                     while ((line = br.readLine()) != null) {
-                        textAreaLogger.append(line + "\n");
+                        producerLogsArea.append(line + "\n");
                         kinesisClientProducer.sendSingleRecord(streamName, line);
                     }
                 } catch (IOException e) {
@@ -119,11 +128,18 @@ public class KinesisClientApp {
     }
 
     private void initUI() {
-        connectionPanel.setBorder(BorderFactory.createTitledBorder("Connection details"));
-        filePanel.setBorder(BorderFactory.createTitledBorder("Data details"));
-        loggerPanel.setBorder(BorderFactory.createTitledBorder("Log details"));
-        streamsPanel.setBorder(BorderFactory.createTitledBorder("Stream details"));
-        startButton.setEnabled(false);
+        /// Consumer ///
+        consumerPanel.setBorder(BorderFactory.createTitledBorder("Kinesis consumer"));
+        consumerLoggerPanel.setBorder(BorderFactory.createTitledBorder("Log details"));
+        consumerStreamsPanel.setBorder(BorderFactory.createTitledBorder("Stream details"));
+
+        /// Producer ///
+        producerPanel.setBorder(BorderFactory.createTitledBorder("Kinesis producer"));
+        producerConnectionPanel.setBorder(BorderFactory.createTitledBorder("Connection details"));
+        producerFilePanel.setBorder(BorderFactory.createTitledBorder("Data details"));
+        producerLoggerPanel.setBorder(BorderFactory.createTitledBorder("Log details"));
+        producerStreamsPanel.setBorder(BorderFactory.createTitledBorder("Stream details"));
+        producerStartBtn.setEnabled(false);
         chooseFileButton.setEnabled(false);
         filePathField.setEditable(false);
         streamComboBox.setEditable(false);
@@ -137,7 +153,7 @@ public class KinesisClientApp {
     private void updateConnected() {
         connectionStatusLabel.setText("Connected");
         chooseFileButton.setEnabled(true);
-        startButton.setEnabled(true);
+        producerStartBtn.setEnabled(true);
     }
 
     private void updateNotConnected() {
