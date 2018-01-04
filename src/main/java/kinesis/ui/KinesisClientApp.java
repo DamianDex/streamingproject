@@ -36,12 +36,24 @@ public class KinesisClientApp {
     private JComboBox consumerStreamComboBox;
     private JTextField textField1;
     private JTextField textField2;
+    private JPanel consumerOptionsPanel;
+    private JRadioButton readOnlyNewRecordsRadioButton;
+    private JRadioButton readOldAndNewRadioButton;
 
     private File dataFile;
 
     private KinesisClientProducer kinesisClientProducer;
 
     public KinesisClientApp() {
+
+        consumerStreamComboBox.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                consumerStreamComboBox.removeAllItems();
+                pushStreamNamesToComboBox();
+            }
+        });
+
         checkConnectivityBtn.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
@@ -132,6 +144,8 @@ public class KinesisClientApp {
         consumerPanel.setBorder(BorderFactory.createTitledBorder("Kinesis consumer"));
         consumerLoggerPanel.setBorder(BorderFactory.createTitledBorder("Log details"));
         consumerStreamsPanel.setBorder(BorderFactory.createTitledBorder("Stream details"));
+        consumerOptionsPanel.setBorder(BorderFactory.createTitledBorder("Reading options"));
+        readOnlyNewRecordsRadioButton.doClick();
 
         /// Producer ///
         producerPanel.setBorder(BorderFactory.createTitledBorder("Kinesis producer"));
@@ -145,9 +159,14 @@ public class KinesisClientApp {
         streamComboBox.setEditable(false);
         newStreamBtn.doClick();
 
+
         ButtonGroup buttonGroup = new ButtonGroup();
         buttonGroup.add(newStreamBtn);
         buttonGroup.add(existingStreamBtn);
+
+        ButtonGroup buttonGroup1 = new ButtonGroup();
+        buttonGroup1.add(readOldAndNewRadioButton);
+        buttonGroup1.add(readOnlyNewRecordsRadioButton);
     }
 
     private void updateConnected() {
@@ -163,6 +182,7 @@ public class KinesisClientApp {
     private void pushStreamNamesToComboBox() {
         for (String name : kinesisClientProducer.getAllStreamNames()) {
             streamComboBox.addItem(name);
+            consumerStreamComboBox.addItem(name);
         }
     }
 }
