@@ -10,6 +10,7 @@ import com.amazonaws.services.kinesis.model.Record;
 import com.amazonaws.services.kinesis.model.ShardIteratorType;
 
 import javax.swing.*;
+import java.util.List;
 
 public class KinesisClientConsumer extends KinesisClientAbstract {
 
@@ -26,16 +27,29 @@ public class KinesisClientConsumer extends KinesisClientAbstract {
 
     public void getRecords(String streamName) {
         String shardId = amazonKinesis.describeStream(streamName).getStreamDescription().getShards().get(0).getShardId();
-        String shardIterator = amazonKinesis.getShardIterator(streamName, shardId, ShardIteratorType.TRIM_HORIZON.toString()).getShardIterator();
+        String shardIterator = amazonKinesis.getShardIterator(streamName, shardId, ShardIteratorType.LATEST.toString()).getShardIterator();
 
+        List<Record> records;
+        while (true) {
+            GetRecordsRequest getRecordsRequest = new GetRecordsRequest();
+            getRecordsRequest.setShardIterator(shardIterator);
+            getRecordsRequest.setLimit(25);
 
-        GetRecordsRequest getRecordsRequest = new GetRecordsRequest();
-        getRecordsRequest.setShardIterator(shardIterator);
+            GetRecordsResult result = amazonKinesis.getRecords(getRecordsRequest);
+            records = result.getRecords();
 
-        GetRecordsResult getRecordsResult = amazonKinesis.getRecords(getRecordsRequest);
-
-        for (Record record : getRecordsResult.getRecords()) {
-            textAreaLogger.append(new String(record.getData().array()));
+            for (Record record : records) {
+                textAreaLogger.append(new String(record.getData().array()));
+                textAreaLogger.append("\n");
+            }
+            try {
+                Thread.sleep(1000);
+            }
+            catch (InterruptedException exception) {
+                throw new RuntimeException(exception);
+            }
+            shardIterator = result.getNextShardIterator();
         }
+
     }
 }

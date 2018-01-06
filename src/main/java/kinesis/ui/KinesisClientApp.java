@@ -140,8 +140,12 @@ public class KinesisClientApp {
         consumerStartBtn.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                String streamName = pointConsumerStream();
-                kinesisClientConsumer.getRecords(streamName);
+                new Thread() {
+                    public void run() {
+                        String streamName = pointConsumerStream();
+                        kinesisClientConsumer.getRecords(streamName);
+                    }
+                }.start();
             }
         });
     }
@@ -199,6 +203,8 @@ public class KinesisClientApp {
         ButtonGroup buttonGroup = new ButtonGroup();
         buttonGroup.add(newStreamBtn);
         buttonGroup.add(existingStreamBtn);
+
+        producerLogsArea.setLineWrap(true);
     }
 
     private void initConsumerUI() {
@@ -213,6 +219,8 @@ public class KinesisClientApp {
         ButtonGroup buttonGroup1 = new ButtonGroup();
         buttonGroup1.add(readOldAndNewRadioButton);
         buttonGroup1.add(readOnlyNewRecordsRadioButton);
+
+        consumerLogsArea.setLineWrap(true);
     }
 
     private void updateSuccessfulConsumerConnectionStatus() {
