@@ -40,7 +40,7 @@ public class KinesisClientApp {
     private JPanel consumerStreamsPanel;
     private JComboBox consumerStreamComboBox;
     private JTextField consumerShardsNumber;
-    private JTextField consumerretentionPeriod;
+    private JTextField consumerRetentionPeriod;
     private JPanel consumerOptionsPanel;
     private JRadioButton readOnlyNewRecordsRadioButton;
     private JRadioButton readOldAndNewRadioButton;
@@ -48,6 +48,7 @@ public class KinesisClientApp {
     private JTextField consumerEndpoint;
     private JButton consumerConnectBtn;
     private JLabel consumerConnectionStatusLabel;
+    private JTextField producernewStreamNumberOfShards;
 
     private File dataFile;
 
@@ -214,6 +215,8 @@ public class KinesisClientApp {
         consumerOptionsPanel.setBorder(BorderFactory.createTitledBorder("Reading options"));
         consumerConnectionPanel.setBorder(BorderFactory.createTitledBorder("Stream details"));
         consumerStartBtn.setEnabled(false);
+        consumerShardsNumber.setEnabled(false);
+        consumerRetentionPeriod.setEnabled(false);
         readOnlyNewRecordsRadioButton.doClick();
 
         ButtonGroup buttonGroup1 = new ButtonGroup();
