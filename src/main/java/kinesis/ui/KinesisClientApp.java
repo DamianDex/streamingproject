@@ -1,23 +1,28 @@
 package kinesis.ui;
 
+import com.amazonaws.services.kinesis.model.StreamDescription;
+import kinesis.client.KinesisClientConsumer;
 import kinesis.client.KinesisClientProducer;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 
 public class KinesisClientApp {
 
-    //GUI Elements//
     private JPanel mainPanel;
-    private JButton checkConnectivityBtn;
+    private JButton producerConnectBtn;
     private JButton chooseFileButton;
     private JButton producerStartBtn;
-    private JTextField endpoint;
+    private JTextField producerEndpoint;
     private JTextField filePathField;
     private JTextArea producerLogsArea;
-    private JLabel connectionStatusLabel;
+    private JLabel producerConnectionStatusLabel;
 
     private JPanel producerConnectionPanel;
     private JPanel producerLoggerPanel;
@@ -34,34 +39,35 @@ public class KinesisClientApp {
     private JButton consumerStartBtn;
     private JPanel consumerStreamsPanel;
     private JComboBox consumerStreamComboBox;
-    private JTextField textField1;
-    private JTextField textField2;
+    private JTextField consumerShardsNumber;
+    private JTextField consumerretentionPeriod;
     private JPanel consumerOptionsPanel;
     private JRadioButton readOnlyNewRecordsRadioButton;
     private JRadioButton readOldAndNewRadioButton;
+    private JPanel consumerConnectionPanel;
+    private JTextField consumerEndpoint;
+    private JButton consumerConnectBtn;
+    private JLabel consumerConnectionStatusLabel;
 
     private File dataFile;
 
     private KinesisClientProducer kinesisClientProducer;
+    private KinesisClientConsumer kinesisClientConsumer;
 
     public KinesisClientApp() {
+        initConsumerListeners();
+        initProducerListeners();
+    }
 
-        consumerStreamComboBox.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                consumerStreamComboBox.removeAllItems();
-                pushStreamNamesToComboBox();
-            }
-        });
-
-        checkConnectivityBtn.addActionListener(new ActionListener() {
+    private void initProducerListeners() {
+        producerConnectBtn.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
                 try {
-                    kinesisClientProducer = new KinesisClientProducer(endpoint.getText(), producerLogsArea);
-                    updateConnected();
+                    kinesisClientProducer = new KinesisClientProducer(producerEndpoint.getText(), producerLogsArea);
+                    updateSuccessfulProducerConnectionStatus();
                 } catch (Exception ex) {
-                    updateNotConnected();
+                    updateFailedProducerConnectionStatus();
                 }
             }
         });
@@ -80,7 +86,7 @@ public class KinesisClientApp {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
 
-                String streamName = pointStream();
+                String streamName = pointProducerStream();
                 FileReader fileReader = null;
 
                 try {
@@ -104,13 +110,43 @@ public class KinesisClientApp {
         existingStreamBtn.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
-                streamComboBox.removeAllItems();
-                pushStreamNamesToComboBox();
+                pushStreamNamesToProducerComboBox();
             }
         });
     }
 
-    private String pointStream() {
+    private void initConsumerListeners() {
+        consumerStreamComboBox.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                pushStreamNamesToConsumerComboBox();
+                updateStreamDescription();
+            }
+        });
+
+        consumerConnectBtn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    kinesisClientConsumer = new KinesisClientConsumer(consumerEndpoint.getText(), consumerLogsArea);
+                    updateSuccessfulConsumerConnectionStatus();
+                    pushStreamNamesToConsumerComboBox();
+                } catch (Exception ex) {
+                    updateFailedConsumerConnectionStatus();
+                }
+            }
+        });
+
+        consumerStartBtn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String streamName = pointConsumerStream();
+                kinesisClientConsumer.getRecords(streamName);
+            }
+        });
+    }
+
+    private String pointProducerStream() {
         String streamName;
 
         if (newStreamBtn.isSelected()) {
@@ -127,6 +163,10 @@ public class KinesisClientApp {
         return streamName;
     }
 
+    private String pointConsumerStream() {
+        return consumerStreamComboBox.getSelectedItem().toString();
+    }
+
     public static void main(String[] args) {
         JFrame jFrame = new JFrame("AWS Amazon Kinesis Client");
         KinesisClientApp kinesisClientApp = new KinesisClientApp();
@@ -134,20 +174,17 @@ public class KinesisClientApp {
         jFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         jFrame.pack();
         jFrame.setVisible(true);
-        jFrame.setSize(600, 600);
+        jFrame.setSize(1000, 1000);
 
         kinesisClientApp.initUI();
     }
 
     private void initUI() {
-        /// Consumer ///
-        consumerPanel.setBorder(BorderFactory.createTitledBorder("Kinesis consumer"));
-        consumerLoggerPanel.setBorder(BorderFactory.createTitledBorder("Log details"));
-        consumerStreamsPanel.setBorder(BorderFactory.createTitledBorder("Stream details"));
-        consumerOptionsPanel.setBorder(BorderFactory.createTitledBorder("Reading options"));
-        readOnlyNewRecordsRadioButton.doClick();
+        initConsumerUI();
+        initProducerUI();
+    }
 
-        /// Producer ///
+    private void initProducerUI() {
         producerPanel.setBorder(BorderFactory.createTitledBorder("Kinesis producer"));
         producerConnectionPanel.setBorder(BorderFactory.createTitledBorder("Connection details"));
         producerFilePanel.setBorder(BorderFactory.createTitledBorder("Data details"));
@@ -159,29 +196,58 @@ public class KinesisClientApp {
         streamComboBox.setEditable(false);
         newStreamBtn.doClick();
 
-
         ButtonGroup buttonGroup = new ButtonGroup();
         buttonGroup.add(newStreamBtn);
         buttonGroup.add(existingStreamBtn);
+    }
+
+    private void initConsumerUI() {
+        consumerPanel.setBorder(BorderFactory.createTitledBorder("Kinesis consumer"));
+        consumerLoggerPanel.setBorder(BorderFactory.createTitledBorder("Log details"));
+        consumerStreamsPanel.setBorder(BorderFactory.createTitledBorder("Stream details"));
+        consumerOptionsPanel.setBorder(BorderFactory.createTitledBorder("Reading options"));
+        consumerConnectionPanel.setBorder(BorderFactory.createTitledBorder("Stream details"));
+        consumerStartBtn.setEnabled(false);
+        readOnlyNewRecordsRadioButton.doClick();
 
         ButtonGroup buttonGroup1 = new ButtonGroup();
         buttonGroup1.add(readOldAndNewRadioButton);
         buttonGroup1.add(readOnlyNewRecordsRadioButton);
     }
 
-    private void updateConnected() {
-        connectionStatusLabel.setText("Connected");
+    private void updateSuccessfulConsumerConnectionStatus() {
+        consumerConnectionStatusLabel.setText("Connected");
+        consumerStartBtn.setEnabled(true);
+    }
+
+    private void updateStreamDescription() {
+        StreamDescription streamDescription = kinesisClientConsumer.getStreamDescription(consumerStreamComboBox.getName());
+    }
+
+    private void updateSuccessfulProducerConnectionStatus() {
+        producerConnectionStatusLabel.setText("Connected");
         chooseFileButton.setEnabled(true);
         producerStartBtn.setEnabled(true);
     }
 
-    private void updateNotConnected() {
-        connectionStatusLabel.setText("Not Connected");
+    private void updateFailedProducerConnectionStatus() {
+        producerConnectionStatusLabel.setText("Not Connected");
     }
 
-    private void pushStreamNamesToComboBox() {
+    private void updateFailedConsumerConnectionStatus() {
+        consumerConnectionStatusLabel.setText("Not connected");
+    }
+
+    private void pushStreamNamesToProducerComboBox() {
+        streamComboBox.removeAllItems();
         for (String name : kinesisClientProducer.getAllStreamNames()) {
             streamComboBox.addItem(name);
+        }
+    }
+
+    private void pushStreamNamesToConsumerComboBox() {
+        consumerStreamComboBox.removeAllItems();
+        for (String name : kinesisClientConsumer.getAllStreamNames()) {
             consumerStreamComboBox.addItem(name);
         }
     }

@@ -2,6 +2,7 @@ package kinesis.client;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.services.kinesis.AmazonKinesis;
+import com.amazonaws.services.kinesis.model.StreamDescription;
 
 import javax.swing.*;
 import java.util.List;
@@ -15,6 +16,10 @@ public abstract class KinesisClientAbstract {
 
     public List<String> getAllStreamNames() {
         return amazonKinesis.listStreams().getStreamNames();
+    }
+
+    public StreamDescription getStreamDescription(String streamName) {
+        return amazonKinesis.describeStream(streamName).getStreamDescription();
     }
 
     public boolean verifyConnection() {

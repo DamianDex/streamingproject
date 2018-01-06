@@ -24,23 +24,18 @@ public class KinesisClientConsumer extends KinesisClientAbstract {
                 .build();
     }
 
-    public void getRecords() {
+    public void getRecords(String streamName) {
+        String shardId = amazonKinesis.describeStream(streamName).getStreamDescription().getShards().get(0).getShardId();
+        String shardIterator = amazonKinesis.getShardIterator(streamName, shardId, ShardIteratorType.TRIM_HORIZON.toString()).getShardIterator();
 
-        ///TODO: Temporary
-        String shardId = amazonKinesis.describeStream("test1").getStreamDescription().getShards().get(0).getShardId();
-        String shardIterator = amazonKinesis.getShardIterator("test1", shardId, ShardIteratorType.TRIM_HORIZON.toString()).getShardIterator();
-        ///
 
         GetRecordsRequest getRecordsRequest = new GetRecordsRequest();
         getRecordsRequest.setShardIterator(shardIterator);
 
         GetRecordsResult getRecordsResult = amazonKinesis.getRecords(getRecordsRequest);
 
-        ///TODO: Temporary
         for (Record record : getRecordsResult.getRecords()) {
-            System.out.println(new String(record.getData().array()));
+            textAreaLogger.append(new String(record.getData().array()));
         }
-        ///
     }
-
 }
