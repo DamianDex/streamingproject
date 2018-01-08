@@ -1,5 +1,6 @@
 package kinesis.ui;
 
+import com.amazonaws.services.kinesis.model.ShardIteratorType;
 import com.amazonaws.services.kinesis.model.StreamDescription;
 import kinesis.client.KinesisClientConsumer;
 import kinesis.client.KinesisClientProducer;
@@ -12,6 +13,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 public class KinesisClientApp {
 
@@ -49,6 +52,7 @@ public class KinesisClientApp {
     private JButton consumerConnectBtn;
     private JLabel consumerConnectionStatusLabel;
     private JTextField producernewStreamNumberOfShards;
+    private JButton fetchStreamdescription;
 
     private File dataFile;
 
@@ -144,11 +148,28 @@ public class KinesisClientApp {
                 new Thread() {
                     public void run() {
                         String streamName = pointConsumerStream();
-                        kinesisClientConsumer.getRecords(streamName);
+                        ShardIteratorType shardIteratorType = chooseShardIteratorType();
+                        kinesisClientConsumer.getRecords(streamName, shardIteratorType);
                     }
                 }.start();
             }
         });
+
+        fetchStreamdescription.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                StreamDescription streamDescription = kinesisClientConsumer.getStreamDescription(consumerStreamComboBox.getSelectedItem().toString());
+                consumerShardsNumber.setText(Integer.valueOf(streamDescription.getShards().size()).toString());
+                consumerRetentionPeriod.setText(streamDescription.getRetentionPeriodHours() + " hours");
+            }
+        });
+    }
+
+    private ShardIteratorType chooseShardIteratorType() {
+        if (readOnlyNewRecordsRadioButton.isSelected()) {
+            return ShardIteratorType.LATEST;
+        }
+        return ShardIteratorType.TRIM_HORIZON;
     }
 
     private String pointProducerStream() {

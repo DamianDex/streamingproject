@@ -25,9 +25,9 @@ public class KinesisClientConsumer extends KinesisClientAbstract {
                 .build();
     }
 
-    public void getRecords(String streamName) {
+    public void getRecords(String streamName, ShardIteratorType shardIteratorType) {
         String shardId = amazonKinesis.describeStream(streamName).getStreamDescription().getShards().get(0).getShardId();
-        String shardIterator = amazonKinesis.getShardIterator(streamName, shardId, ShardIteratorType.LATEST.toString()).getShardIterator();
+        String shardIterator = amazonKinesis.getShardIterator(streamName, shardId, shardIteratorType.toString()).getShardIterator();
 
         List<Record> records;
         while (true) {
